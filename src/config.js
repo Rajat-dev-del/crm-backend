@@ -5,7 +5,7 @@ const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL
 const urls = isProduction
   ? {
     frontendUrl: "https://crm-frontend-rho-amber.vercel.app",
-    apiUrl: "https://crm-backend-seven-mu.vercel.app",
+    apiUrl: "https://crm-backend-six-umber.vercel.app",
   }
   : {
     frontendUrl: "http://localhost:3000",
