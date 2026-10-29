@@ -21,6 +21,10 @@ app.use(cors({
   },
 }));
 app.use(express.json({ limit: "10kb" }));
+app.use(async (_req, _res, next) => {
+  await initializeDatabase();
+  next();
+});
 
 app.get("/health", async (_req, res, next) => {
   try {
@@ -50,7 +54,12 @@ async function start() {
   app.listen(port, () => console.log(`CRM API listening on http://localhost:${port}`));
 }
 
-start().catch((error) => {
-  console.error("Could not start CRM API:", error.message);
-  process.exitCode = 1;
-});
+// Vercel imports the exported app; only listen when run directly (npm run dev / npm start).
+if (require.main === module) {
+  start().catch((error) => {
+    console.error("Could not start CRM API:", error.message);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = app;

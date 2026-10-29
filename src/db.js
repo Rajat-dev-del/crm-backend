@@ -22,12 +22,22 @@ userSchema.index(
 
 const User = mongoose.model("User", userSchema);
 
-async function initializeDatabase() {
-  await mongoose.connect(process.env.MONGODB_URI, {
-    dbName: process.env.MONGODB_DB_NAME || "crm",
-    serverSelectionTimeoutMS: 10_000,
+let connection = null;
+
+// Connects once per process and reuses it, so serverless instances (Vercel) don't reconnect on every request.
+// A failed attempt is cleared so the next request retries.
+function initializeDatabase() {
+  connection ??= (async () => {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      dbName: process.env.MONGODB_DB_NAME || "crm",
+      serverSelectionTimeoutMS: 10_000,
+    });
+    await User.syncIndexes();
+  })().catch((error) => {
+    connection = null;
+    throw error;
   });
-  await User.syncIndexes();
+  return connection;
 }
 
 async function pingDatabase() {

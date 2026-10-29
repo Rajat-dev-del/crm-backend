@@ -15,6 +15,17 @@ Google OAuth uses the authorization-code flow with state validation and PKCE. Go
 
 For the local Google OAuth client, configure the authorized JavaScript origin as `http://localhost:3000` and the authorized redirect URI as `http://localhost:4000/api/auth/google/callback`. For deployment, use the deployed frontend origin and exact backend callback URL.
 
+## Deploying to Vercel
+
+`src/server.js` exports the Express app, which Vercel detects and runs as a serverless function; `app.listen()` only runs when the file is started directly. The MongoDB connection is opened on the first request and reused while the instance stays warm.
+
+1. Import the `crm-backend` repository in Vercel (framework preset: Other / Express). No build command is needed.
+2. Add the environment variables from `.env.example` in Project → Settings → Environment Variables, with `NODE_ENV=production`. `PORT` is not needed. Set `CLIENT_ORIGIN` and `FRONTEND_URL` to the deployed frontend URL and `GOOGLE_CALLBACK_URL` to `https://<backend-domain>/api/auth/google/callback` (also registered in Google Cloud Console).
+3. In Atlas → Network Access, allow `0.0.0.0/0`; Vercel has no fixed outbound IPs.
+4. Set the frontend's `NEXT_PUBLIC_API_URL` to the backend URL and redeploy the frontend.
+
+Rate limits are kept in memory, so on Vercel they apply per function instance rather than globally.
+
 ## Endpoints
 
 ### `POST /api/auth/register`
