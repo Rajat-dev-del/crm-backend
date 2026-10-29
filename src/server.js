@@ -5,18 +5,16 @@ const express = require("express");
 const helmet = require("helmet");
 const { initializeDatabase, pingDatabase } = require("./db");
 const authRouter = require("./auth");
+const { clientOrigins } = require("./config");
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
-const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:3000")
-  .split(",")
-  .map((origin) => origin.trim());
 
 app.disable("x-powered-by");
 app.use(helmet());
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    if (!origin || clientOrigins.includes(origin)) return callback(null, true);
     return callback(Object.assign(new Error(`Origin ${origin} is not allowed by CORS. Add it to CLIENT_ORIGIN.`), { status: 403 }));
   },
 }));

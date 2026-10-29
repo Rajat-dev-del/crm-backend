@@ -4,6 +4,7 @@ const express = require("express");
 const crypto = require("crypto");
 const { rateLimit } = require("express-rate-limit");
 const { User } = require("./db");
+const { isProduction, frontendUrl, googleCallbackUrl } = require("./config");
 
 const router = express.Router();
 const authLimiter = rateLimit({
@@ -14,12 +15,11 @@ const authLimiter = rateLimit({
   message: { error: "Too many authentication attempts. Please try again later." },
 });
 const googleStateCookie = "crm_google_oauth_state";
-const apiPort = Number(process.env.PORT) || 4000;
 
 function oauthCookieOptions() {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isProduction,
     sameSite: "lax",
     path: "/api/auth/google",
     maxAge: 10 * 60 * 1000,
@@ -44,15 +44,12 @@ function googleConfig() {
   return {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    redirectUri: process.env.GOOGLE_CALLBACK_URL || `http://localhost:${apiPort}/api/auth/google/callback`,
-    frontendUrl: (process.env.FRONTEND_URL || process.env.CLIENT_ORIGIN || "http://localhost:3000")
-      .split(",")[0].trim().replace(/\/$/, ""),
+    redirectUri: googleCallbackUrl,
+    frontendUrl,
   };
 }
 
 function redirectOAuthError(res) {
-  let frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_ORIGIN || "http://localhost:3000";
-  frontendUrl = frontendUrl.split(",")[0].trim().replace(/\/$/, "");
   return res.redirect(`${frontendUrl}/auth/callback#error=google`);
 }
 
